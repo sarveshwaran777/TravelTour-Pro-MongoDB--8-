@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String     @unique
+  password  String
+  phone     String?
+  address   String?
+  age       Int?
+  role      Role       @default(USER)
+  createdAt DateTime   @default(now())
+  bookings  Booking[]
+  reviews   Review[]
+}
+
+model State {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String        @unique
+  description  String?
+  image        String?
+  destinations Destination[]
+  createdAt    DateTime      @default(now())
+}
+
+model Destination {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  stateId      String     @db.ObjectId
+  state        State     @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  description  String?
+  highlights   String?
+  rating       Float      @default(4.5)
+  price        Float      @default(0)
+  image        String?
+  mapEmbedUrl  String?
+  createdAt    DateTime  @default(now())
+  bookings     Booking[]
+  reviews      Review[]
+}
+
+model Booking {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  bookingId       String        @unique
+  userId          String?       @db.ObjectId
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  destinationId   String        @db.ObjectId
+  destination     Destination   @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  travelDate      DateTime
+  numberOfPersons Int           @default(1)
+  transport       Transport     @default(CAR)
+  foodPreference  FoodPreference @default(VEG)
+  totalCost       Float         @default(0)
+  paymentMethod   PaymentMethod @default(GOOGLE_PAY)
+  paymentStatus   PaymentStatus @default(PENDING)
+  status          BookingStatus @default(PENDING)
+  guestName       String?
+  guestEmail      String?
+  guestPhone      String?
+  guestAddress    String?
+  guestAge        Int?
+  createdAt       DateTime      @default(now())
+}
+
+model Review {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String?     @db.ObjectId
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  destinationId String      @db.ObjectId
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  rating        Int
+  comment       String?
+  createdAt     DateTime    @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Transport {
+  CAR
+  TRAIN
+  FLIGHT
+}
+
+enum FoodPreference {
+  VEG
+  NON_VEG
+  JAIN
+  NO_MEALS
+}
+
+enum PaymentMethod {
+  GOOGLE_PAY
+  PHONEPE
+  PAYTM
+  PAYPAL
+  BHIM_UPI
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  PENDING
+}
